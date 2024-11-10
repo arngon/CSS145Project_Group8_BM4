@@ -27,13 +27,15 @@ This application allows you to explore anime data, visualize trends, and use mac
 """)
 
 # File upload
-anime_file = st.file_uploader("Upload anime dataset (anime_cleaned.csv)", type="csv")
-user_file = st.file_uploader("Upload user dataset (users_cleaned.csv)", type="csv")
+#anime_file = st.file_uploader("Upload anime dataset (anime_cleaned.csv)", type="csv")
+#user_file = st.file_uploader("Upload user dataset (users_cleaned.csv)", type="csv")
+anime_df = pd.read_csv("anime_cleaned.csv")
+user_df = pd.read_csv("user_cleaned.csv")
 
 # Load datasets if uploaded
-if anime_file and user_file:
-    anime_df = pd.read_csv(anime_file)
-    user_df = pd.read_csv(user_file)
+#if anime_file and user_file:
+    #anime_df = pd.read_csv(anime_file)
+   # user_df = pd.read_csv(user_file)
 
     # Data overview
     st.subheader("Anime Dataset Overview")
