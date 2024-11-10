@@ -27,15 +27,13 @@ This application allows you to explore anime data, visualize trends, and use mac
 """)
 
 # File upload
-#anime_file = st.file_uploader("Upload anime dataset (anime_cleaned.csv)", type="csv")
-#user_file = st.file_uploader("Upload user dataset (users_cleaned.csv)", type="csv")
 anime_df = pd.read_csv("anime_cleaned.csv")
 user_df = pd.read_csv("user_cleaned.csv")
 
 # Load datasets if uploaded
-#if anime_file and user_file:
-    #anime_df = pd.read_csv(anime_file)
-   # user_df = pd.read_csv(user_file)
+if anime_file and user_file:
+    anime_df = pd.read_csv(anime_file)
+    user_df = pd.read_csv(user_file)
 
     # Data overview
     st.subheader("Anime Dataset Overview")
@@ -51,7 +49,7 @@ user_df = pd.read_csv("user_cleaned.csv")
 
     # Scatter Plot: Score vs Episodes
     st.subheader("Scatter Plot: Anime Score vs Episodes")
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots()
     ax.scatter(anime_df['episodes'], anime_df['score'], color='green', alpha=0.6)
     ax.set_title('Scatter Plot of Anime Score vs Episodes')
     ax.set_xlabel('Episodes')
@@ -63,7 +61,7 @@ user_df = pd.read_csv("user_cleaned.csv")
     st.subheader("Genre Frequency Distribution")
     anime_genres = anime_df['genre'].str.split(',').explode().str.strip()
     genre_counts = anime_genres.value_counts()
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(12, 8))
     ax.bar(genre_counts.index, genre_counts.values, color='purple', alpha=0.7, edgecolor='darkviolet')
     ax.set_title('Frequency Distribution of Anime Genres')
     ax.set_xlabel('Genres')
@@ -73,7 +71,7 @@ user_df = pd.read_csv("user_cleaned.csv")
 
     # Line Plot: User Days Spent Watching
     st.subheader("User Days Spent Watching Over Time")
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(15, 8))
     ax.plot(user_df.index, user_df['user_days_spent_watching'], color='purple', marker='o', linestyle='-', linewidth=2)
     ax.set_title('User Days Spent Watching Over Time')
     ax.set_xlabel('User Index')
@@ -90,15 +88,10 @@ user_df = pd.read_csv("user_cleaned.csv")
         'Dropped': user_df['user_dropped'].sum(),
         'Plan to Watch': user_df['user_plantowatch'].sum()
     }
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots()
     ax.pie(status_counts.values(), labels=status_counts.keys(), autopct='%1.1f%%', startangle=90,
            colors=['#ff9999','#66b3ff','#99ff99','#ffcc99','#c2c2f0'])
     ax.set_title('Proportion of Users in Each Anime Status')
-    st.pyplot(fig)
-
-    # Pair Plot
-    st.subheader("Pair Plot of Anime Data")
-    fig = sns.pairplot(anime_df[['episodes', 'score', 'members']], diag_kind='kde', plot_kws={'alpha':0.6})
     st.pyplot(fig)
 
     # Cosine Similarity for Anime Recommendations
@@ -124,37 +117,19 @@ user_df = pd.read_csv("user_cleaned.csv")
     else:
         st.write(f"{input_anime} not found in the dataset.")
 
-    # Forecasting Average Anime Score with ARIMA
-    st.subheader("Average Anime Score Forecast with ARIMA")
+    # Forecasting Average Anime Score with Prophet
+    st.subheader("Average Anime Score Forecast with Prophet")
     anime_df['aired_from_year'] = pd.to_datetime(anime_df['aired_from_year'], format='%Y')
     data = anime_df.groupby('aired_from_year')['score'].mean().reset_index()
-    data.set_index('aired_from_year', inplace=True)
+    data = data.rename(columns={'aired_from_year': 'ds', 'score': 'y'})
     
-    model = ARIMA(data['score'], order=(1, 1, 1))
-    model_fit = model.fit()
-    forecast = model_fit.get_forecast(steps=5)
-    forecast_index = pd.date_range(start=data.index[-1], periods=6, freq='Y')[1:]
-    forecast_series = pd.Series(forecast.predicted_mean, index=forecast_index)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(data.index, data['score'], label='Historical Average Score')
-    ax.plot(forecast_series.index, forecast_series, label='ARIMA Forecast', color='red')
-    ax.set_title("Average Anime Score Forecast with ARIMA")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Average Score")
-    ax.legend()
-    st.pyplot(fig)
-
-    # Prophet Forecast for Comparison
-    st.subheader("Average Anime Score Forecast with Prophet")
-    data_prophet = data.reset_index().rename(columns={'aired_from_year': 'ds', 'score': 'y'})
     prophet_model = Prophet(yearly_seasonality=True)
-    prophet_model.fit(data_prophet)
+    prophet_model.fit(data)
     future = prophet_model.make_future_dataframe(periods=5, freq='Y')
     forecast = prophet_model.predict(future)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(data.index, data['score'], label='Historical Average Score', marker='o')
+    fig, ax = plt.subplots()
+    ax.plot(data['ds'], data['y'], label='Historical Average Score', marker='o')
     ax.plot(forecast['ds'], forecast['yhat'], label='Prophet Forecast', color='red', marker='o')
     ax.set_title("Average Anime Score Forecast with Prophet")
     ax.set_xlabel("Year")
