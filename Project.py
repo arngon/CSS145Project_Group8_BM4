@@ -47,6 +47,23 @@ anime_df['episodes'] = pd.to_numeric(anime_df['episodes'], errors='coerce')
 anime_df['score'] = pd.to_numeric(anime_df['score'], errors='coerce')
 user_df['user_days_spent_watching'] = pd.to_numeric(user_df['user_days_spent_watching'], errors='coerce')
 
+# Convert 'episodes' and 'score' to numeric, coercing errors to NaN
+anime_df['episodes'] = pd.to_numeric(anime_df['episodes'], errors='coerce')
+anime_df['score'] = pd.to_numeric(anime_df['score'], errors='coerce')
+
+# Frequency of episode counts
+episode_counts = anime_df['episodes'].value_counts()
+st.subheader("Frequency of Episode Counts")
+st.write(episode_counts)
+
+# Anime with the highest number of episodes
+highest_episode_anime = anime_df.loc[anime_df['episodes'].idxmax()]
+st.subheader("Anime with the Highest Number of Episodes")
+st.write(highest_episode_anime)
+
+# Clean DataFrame by dropping rows with NaN values in 'episodes' or 'score'
+anime_df_clean = anime_df.dropna(subset=['episodes', 'score'])
+
 # Scatter Plot: Score vs Episodes
 st.subheader("Scatter Plot: Anime Score vs Episodes")
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -56,6 +73,19 @@ ax.set_xlabel('Episodes')
 ax.set_ylabel('Score')
 ax.grid(True)
 st.pyplot(fig)
+
+# Title of the Streamlit app
+st.title("Anime Genre Frequency Analysis")
+
+# Analyze genres
+anime_genres = anime_df['genre'].str.split(',').explode().str.strip()
+
+# Frequency of genres
+genre_counts = anime_genres.value_counts()
+
+# Display genre counts in Streamlit
+st.subheader("Frequency of Genres")
+st.write(genre_counts)
 
 # Bar Plot: Genre Distribution
 st.subheader("Genre Frequency Distribution")
@@ -69,6 +99,17 @@ ax.set_ylabel('Frequency')
 plt.xticks(rotation=90)
 st.pyplot(fig)
 
+
+# Title of the Streamlit app
+st.title("Anime Watching Days Analysis")
+
+# Analyze days spent watching anime
+daysspent_counts = user_df['user_days_spent_watching'].value_counts()
+
+# Display days spent watching counts in Streamlit
+st.subheader("Days Spent Watching Anime")
+st.write(daysspent_counts)
+
 # Line Plot: User Days Spent Watching
 st.subheader("User Days Spent Watching Over Time")
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -78,6 +119,33 @@ ax.set_xlabel('User Index')
 ax.set_ylabel('Days Spent Watching')
 ax.grid(True)
 st.pyplot(fig)
+
+# Title of the Streamlit app
+st.title("Top-Rated Anime Analysis")
+
+# Get the top 20 anime based on score
+top_anime_df = anime_df.sort_values(by='score', ascending=False).head(20)
+
+# Display top anime DataFrame
+st.subheader("Top 20 Anime by Score")
+st.write(top_anime_df)
+
+# Horizontal bar plot of top-rated anime
+plt.figure(figsize=(12, 8))
+plt.barh(top_anime_df['title'], top_anime_df['score'], color='purple', alpha=0.6, edgecolor='darkslategray', height=0.6)
+plt.xlabel('Score')
+plt.ylabel('Anime Title')
+plt.title('Top-Rated Anime by Score')
+plt.gca().invert_yaxis()  # Invert y axis to have the highest score at the top
+plt.grid(axis='x', linestyle='--', alpha=0.7)
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=9)
+
+# Display the plot in Streamlit
+st.pyplot(plt)
+
+# Title of the Streamlit app
+st.title("Anime User Status Analysis")
 
 # Pie Chart: Anime Watching Status Distribution
 st.subheader("Proportion of Users in Each Anime Status")
@@ -92,11 +160,6 @@ fig, ax = plt.subplots(figsize=(8, 6))
 ax.pie(status_counts.values(), labels=status_counts.keys(), autopct='%1.1f%%', startangle=90,
        colors=['#ff9999','#66b3ff','#99ff99','#ffcc99','#c2c2f0'])
 ax.set_title('Proportion of Users in Each Anime Status')
-st.pyplot(fig)
-
-# Pair Plot
-st.subheader("Pair Plot of Anime Data")
-fig = sns.pairplot(anime_df[['episodes', 'score', 'members']], diag_kind='kde', plot_kws={'alpha':0.6})
 st.pyplot(fig)
 
 # Cosine Similarity for Anime Recommendations
@@ -121,6 +184,32 @@ if input_anime in anime_df['title'].values:
         st.write("-", title)
 else:
     st.write(f"{input_anime} not found in the dataset.")
+
+# Function to recommend top anime based on score
+def recommend_top_anime(anime_df, top_n=5):
+    # Sort the anime by score in descending order
+    top_anime = anime_df.sort_values(by='score', ascending=False).head(top_n)
+    return top_anime[['title', 'title_english', 'score']]
+
+# Streamlit app layout
+st.title("Top Anime Recommendations")
+st.write("This application recommends the top anime based on their scores.")
+
+# User input for number of recommendations
+top_n = st.slider("Select number of top anime to recommend:", min_value=1, max_value=20, value=5)
+
+# Get recommended anime
+recommended_anime = recommend_top_anime(anime_df, top_n)
+
+# Display the recommendations in a clear format
+st.subheader("Top Recommended Anime Based on Scores:")
+for index, row in recommended_anime.iterrows():
+    st.write(f"*Title:* {row['title']}")
+    st.write(f"*English Title:* {row['title_english']}")
+    st.write(f"*Score:* {row['score']:.1f}")
+    st.write("---")  # Separator line for each anime
+
+st.title("Prophet Model Components Visualization")
 
 # Forecasting Average Anime Score with ARIMA
 st.subheader("Average Anime Score Forecast with ARIMA")
@@ -158,4 +247,30 @@ ax.set_title("Average Anime Score Forecast with Prophet")
 ax.set_xlabel("Year")
 ax.set_ylabel("Average Score")
 ax.legend()
+st.pyplot(fig)
+
+
+# Aggregate average scores by year
+data = anime_df.groupby('aired_from_year')['score'].mean().reset_index()
+data = data.rename(columns={'aired_from_year': 'Year', 'score': 'Average Score'})
+
+# Prepare data for Prophet
+prophet_data = data.rename(columns={'Year': 'ds', 'Average Score': 'y'})
+
+# Initialize and fit the Prophet model
+prophet_model = Prophet(yearly_seasonality=True)
+prophet_model.fit(prophet_data)
+
+# Forecast for the next 5 years
+forecast_years = 5
+future = prophet_model.make_future_dataframe(periods=forecast_years, freq='Y')
+prophet_forecast = prophet_model.predict(future)
+
+# Streamlit app layout
+st.subheader("This application visualizes the components of the Prophet model.")
+
+# Plotting the components
+fig = prophet_model.plot_components(prophet_forecast)
+
+# Display the plot in Streamlit
 st.pyplot(fig)
