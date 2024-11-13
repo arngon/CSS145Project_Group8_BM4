@@ -66,6 +66,8 @@ anime_df_clean = anime_df.dropna(subset=['episodes', 'score'])
 
 # Scatter Plot: Score vs Episodes
 st.subheader("Scatter Plot: Anime Score vs Episodes")
+st.markdown("""The analysis investigates the relationship between the number of episodes and anime scores. By converting and cleaning the data, a scatter plot was generated, revealing no significant correlation between episode count and score. The frequency analysis shows that certain episode counts are more prevalent, while long-running series are relatively rare. Interestingly, anime scores remain varied across all episode lengths, indicating that episode count does not significantly impact audience ratings and that other factors may better explain anime popularity or quality.
+            """)
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.scatter(anime_df['episodes'], anime_df['score'], color='green', alpha=0.6)
 ax.set_title('Scatter Plot of Anime Score vs Episodes')
@@ -76,7 +78,6 @@ st.pyplot(fig)
 
 # Title of the Streamlit app
 st.title("Anime Genre Frequency Analysis")
-
 # Analyze genres
 anime_genres = anime_df['genre'].str.split(',').explode().str.strip()
 
@@ -89,6 +90,8 @@ st.write(genre_counts)
 
 # Bar Plot: Genre Distribution
 st.subheader("Genre Frequency Distribution")
+st.markdown("""The bar graph indicates a strong affinity for genres that blend humor, romance, and everyday experiences, while also showcasing a diverse range of interests in action and fantasy themes. The varying frequencies suggest that while certain combinations are highly favored, there is also room for less conventional genre pairings""")
+
 anime_genres = anime_df['genre'].str.split(',').explode().str.strip()
 genre_counts = anime_genres.value_counts()
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -112,6 +115,7 @@ st.write(daysspent_counts)
 
 # Line Plot: User Days Spent Watching
 st.subheader("User Days Spent Watching Over Time")
+st.markdown("""The plot chart shows a wide distribution of the number of days users spend watching content, with many users clustering around lower values while a significant number spike to high levels, exceeding 800 days. This suggests substantial variation in user engagement, with a few highly active users skewing the distribution upwards.""")
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(user_df.index, user_df['user_days_spent_watching'], color='purple', marker='o', linestyle='-', linewidth=2)
 ax.set_title('User Days Spent Watching Over Time')
@@ -122,6 +126,8 @@ st.pyplot(fig)
 
 # Title of the Streamlit app
 st.title("Top-Rated Anime Analysis")
+st.markdown("""This bar chart shows a comparison of top-rated anime by their scores, with each anime title listed along the y-axis and the corresponding score on the x-axis. The data suggests that most anime titles score above 7, 
+            indicating they are generally well-received by viewers. Popular anime series like "Fullmetal Alchemist: Brotherhood," "Attack on Titan," and "Steins;Gate" tend to score in the higher range, often nearing or exceeding 8, which reflects their widespread popularity and critical acclaim. A few titles fall below the 7-point mark, suggesting more mixed receptions. This visualization highlights the overall positive reception of many popular anime series, with a significant number maintaining high scores, demonstrating consistent quality and viewer satisfaction within the top-rated anime selections.""")
 
 # Get the top 20 anime based on score
 top_anime_df = anime_df.sort_values(by='score', ascending=False).head(20)
@@ -146,7 +152,7 @@ st.pyplot(plt)
 
 # Title of the Streamlit app
 st.title("Anime User Status Analysis")
-
+st.markdown("""This pie chart illustrates the distribution of users' statuses for anime series. The majority, 63.4%, have "Completed" the anime, reflecting strong viewer engagement and series completion rates. Another significant portion, 24.4%, indicates "Plan to Watch," suggesting high interest among viewers. A smaller segment, 4.8%, is "Watching" currently, while 3.8% have "Dropped" the anime, and 3.7% have placed it "On Hold." The data highlights that most users either complete or intend to watch the anime, with relatively few abandoning or pausing mid-series.""")
 # Pie Chart: Anime Watching Status Distribution
 st.subheader("Proportion of Users in Each Anime Status")
 status_counts = {
